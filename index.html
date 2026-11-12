@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicShield - Anonymous Reporting Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #090d16; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+        @media print {
+            header, nav, footer, .no-print, #toast { display: none !important; }
+            body { background: white !important; color: black !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950">
+
+    <!-- Header Navigation -->
+    <header class="border-b border-slate-800/80 bg-slate-900/90 backdrop-blur-md sticky top-0 z-40 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchView('submit')">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 via-teal-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-cyan-950/50">
+                    <i data-lucide="shield-alert" class="w-6 h-6 text-slate-950 stroke-[2.5]"></i>
+                </div>
+                <div>
+                    <span class="font-extrabold text-lg tracking-tight bg-gradient-to-r from-slate-100 via-slate-200 to-slate-400 bg-clip-text text-transparent">CivicShield</span>
+                    <span class="hidden sm:inline-block text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 ml-2 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800/50">Encrypted Reporting</span>
+                </div>
+            </div>
+
+            <nav class="flex items-center space-x-1 sm:space-x-1.5 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800/80 text-xs sm:text-sm">
+                <button id="nav-submit" onclick="switchView('submit')" class="px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 bg-cyan-500 text-slate-950 shadow-md">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    <span>New Report</span>
+                </button>
+                <button id="nav-track" onclick="switchView('track')" class="px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                    <span>Track Status</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex-grow w-full">
+
+        <!-- SUBMIT REPORT VIEW -->
+        <div id="view-submit" class="space-y-6">
+            <div class="text-center space-y-2 max-w-2xl mx-auto">
+                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-100">Anonymous Community Safety Reporting</h1>
+                <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                    Report public safety issues securely and anonymously. No IP addresses or personal identifying logs are ever stored.
+                </p>
+            </div>
+
+            <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-sm">
+                <form id="report-form" onsubmit="handleReportSubmit(event)" class="space-y-6">
+                    
+                    <!-- Category Selection -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400">1. Incident Category <span class="text-rose-500">*</span></label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="border border-slate-800 bg-slate-950/60 rounded-xl p-3 flex items-start space-x-3 cursor-pointer hover:border-cyan-500/50 transition-colors">
+                                <input type="radio" name="category" value="Suspected Drug Dealing/Distribution" required class="mt-1 text-cyan-500 focus:ring-0 bg-slate-900 border-slate-700">
+                                <div class="text-xs">
+                                    <span class="font-semibold text-slate-200 block">Dealing / Distribution</span>
+                                    <span class="text-slate-500 text-[11px]">Suspicious drop-offs, exchanges, or trafficking.</span>
+                                </div>
+                            </label>
+                            <label class="border border-slate-800 bg-slate-950/60 rounded-xl p-3 flex items-start space-x-3 cursor-pointer hover:border-cyan-500/50 transition-colors">
+                                <input type="radio" name="category" value="Active Drug Consumption" class="mt-1 text-cyan-500 focus:ring-0 bg-slate-900 border-slate-700">
+                                <div class="text-xs">
+                                    <span class="font-semibold text-slate-200 block">Public Consumption</span>
+                                    <span class="text-slate-500 text-[11px]">Active public drug use or intoxication incidents.</span>
+                                </div>
+                            </label>
+                            <label class="border border-slate-800 bg-slate-950/60 rounded-xl p-3 flex items-start space-x-3 cursor-pointer hover:border-cyan-500/50 transition-colors">
+                                <input type="radio" name="category" value="Paraphernalia / Hazardous Waste Disposal" class="mt-1 text-cyan-500 focus:ring-0 bg-slate-900 border-slate-700">
+                                <div class="text-xs">
+                                    <span class="font-semibold text-slate-200 block">Hazardous Waste / Paraphernalia</span>
+                                    <span class="text-slate-500 text-[11px]">Abandoned needles, vials, or contaminated items.</span>
+                                </div>
+                            </label>
+                            <label class="border border-slate-800 bg-slate-950/60 rounded-xl p-3 flex items-start space-x-3 cursor-pointer hover:border-cyan-500/50 transition-colors">
+                                <input type="radio" name="category" value="Suspicious Vehicle Activity" class="mt-1 text-cyan-500 focus:ring-0 bg-slate-900 border-slate-700">
+                                <div class="text-xs">
+                                    <span class="font-semibold text-slate-200 block">Suspicious Vehicle</span>
+                                    <span class="text-slate-500 text-[11px]">Unattended vehicles idling or repeatedly parked oddly.</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Location & Time -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="sm:col-span-2 space-y-1.5">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400">2. Location / Landmark <span class="text-rose-500">*</span></label>
+                            <input type="text" id="report-location" required placeholder="e.g., Near 4th St Park bench / Alley behind market"
+                                   class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-cyan-500">
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400">Priority Level</label>
+                            <select id="report-priority" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-cyan-500">
+                                <option value="Medium">Medium Priority</option>
+                                <option value="High">High Priority / Urgent</option>
+                                <option value="Low">Low Priority</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400">Date Observed</label>
+                            <input type="date" id="report-date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-cyan-500">
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400">Approximate Time</label>
+                            <input type="time" id="report-time" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-cyan-500">
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400">3. Incident Details & Observations <span class="text-rose-500">*</span></label>
+                        <textarea id="report-description" rows="4" required placeholder="Describe what you observed (vehicles, physical descriptions, frequency, specific areas)..."
+                                  class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs sm:text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-cyan-500"></textarea>
+                    </div>
+
+                    <!-- Optional Photo Upload -->
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400">4. Optional Photo Evidence (Max 2 images, compressed automatically)</label>
+                        <input type="file" id="report-file-input" accept="image/*" multiple onchange="handleFileSelection(event)"
+                               class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-cyan-400 hover:file:bg-slate-700 cursor-pointer">
+                        <div id="preview-container" class="flex gap-2 pt-2 flex-wrap"></div>
+                    </div>
+
+                    <button type="submit" id="submit-btn" class="w-full bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-slate-950 font-bold py-3.5 px-4 rounded-xl transition-all shadow-lg shadow-cyan-950 flex items-center justify-center gap-2 text-sm">
+                        <i data-lucide="shield-check" class="w-5 h-5"></i>
+                        <span>Submit Encrypted Anonymous Report</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- SUCCESS MODAL VIEW -->
+        <div id="view-success" class="hidden space-y-6 max-w-xl mx-auto">
+            <div class="bg-slate-900/90 border border-emerald-500/40 rounded-2xl p-6 sm:p-8 shadow-2xl text-center space-y-6">
+                <div class="w-16 h-16 bg-emerald-950 text-emerald-400 rounded-2xl border border-emerald-800 flex items-center justify-center mx-auto shadow-inner">
+                    <i data-lucide="check-circle" class="w-8 h-8"></i>
+                </div>
+                <div class="space-y-2">
+                    <h2 class="text-xl sm:text-2xl font-bold text-slate-100">Report Successfully Filed</h2>
+                    <p class="text-xs sm:text-sm text-slate-400">Your report has been transmitted securely. Save your secret access PIN below to check updates later.</p>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 text-left">
+                    <div class="flex justify-between text-xs text-slate-400">
+                        <span>Incident Reference ID:</span>
+                        <span id="receipt-id" class="font-mono font-bold text-cyan-400"></span>
+                    </div>
+                    <div class="flex justify-between text-xs text-slate-400">
+                        <span>Secret Tracking PIN:</span>
+                        <span id="receipt-pin" class="font-mono font-bold text-emerald-400 text-sm"></span>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="window.print()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold py-3 px-4 rounded-xl border border-slate-700 flex items-center justify-center gap-2">
+                        <i data-lucide="printer" class="w-4 h-4"></i> Print Receipt
+                    </button>
+                    <button onclick="switchView('submit')" class="flex-1 bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Submit Another Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRACK STATUS VIEW -->
+        <div id="view-track" class="hidden space-y-6 max-w-xl mx-auto">
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6">
+                <div class="text-center space-y-1">
+                    <h2 class="text-xl font-bold text-slate-100">Track Report Status</h2>
+                    <p class="text-xs text-slate-400">Enter your Secret PIN (e.g., REP-123456) to look up live progress.</p>
+                </div>
+                <div class="space-y-4">
+                    <input type="text" id="track-pin-input" placeholder="Enter Secret PIN (e.g., REP-123456)"
+                           class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-center text-sm font-mono tracking-widest text-slate-100 placeholder-slate-600 focus:outline-none focus:border-cyan-500">
+                    <button onclick="handleTrackReport()" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg">
+                        <i data-lucide="search" class="w-4 h-4"></i> Look Up Report Status
+                    </button>
+                </div>
+                <div id="track-result-container" class="space-y-4 pt-4"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Clean Public Footer (No Admin Links) -->
+    <footer class="border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-600 no-print">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <span>CivicShield Safe Platform &bull; Zero Log Retention</span>
+            <span class="text-slate-500 flex items-center gap-1">
+                <i data-lucide="lock" class="w-3.5 h-3.5 text-emerald-500"></i> End-to-End Encrypted Relay
+            </span>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-900 border border-cyan-500/40 text-slate-100 px-4 py-3 rounded-xl shadow-2xl hidden items-center space-x-3 transition-all">
+        <i data-lucide="info" class="w-4 h-4 text-cyan-400"></i>
+        <span id="toast-message" class="text-xs font-medium"></span>
+    </div>
+
+    <script>
+        // PASTE YOUR FIREBASE REALTIME DATABASE URL HERE (No trailing slash)
+        const FIREBASE_DB_URL = "https://civicshield-7b1e3-default-rtdb.firebaseio.com/";
+
+        let uploadedImagesData = [];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            const now = new Date();
+            document.getElementById('report-date').value = now.toISOString().split('T')[0];
+            document.getElementById('report-time').value = now.toTimeString().substring(0, 5);
+        });
+
+        function switchView(viewName) {
+            document.getElementById('view-submit').classList.add('hidden');
+            document.getElementById('view-success').classList.add('hidden');
+            document.getElementById('view-track').classList.add('hidden');
+
+            document.getElementById('nav-submit').className = "px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5";
+            document.getElementById('nav-track').className = "px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5";
+
+            if (viewName === 'submit') {
+                document.getElementById('view-submit').classList.remove('hidden');
+                document.getElementById('nav-submit').className = "px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 bg-cyan-500 text-slate-950 shadow-md";
+            } else if (viewName === 'track') {
+                document.getElementById('view-track').classList.remove('hidden');
+                document.getElementById('nav-track').className = "px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 bg-cyan-500 text-slate-950 shadow-md";
+            }
+            lucide.createIcons();
+        }
+
+        function handleFileSelection(event) {
+            const files = Array.from(event.target.files).slice(0, 2);
+            uploadedImagesData = [];
+            const container = document.getElementById('preview-container');
+            container.innerHTML = '';
+
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800;
+                        const scale = Math.min(1, MAX_WIDTH / img.width);
+                        canvas.width = img.width * scale;
+                        canvas.height = img.height * scale;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        uploadedImagesData.push(compressedDataUrl);
+
+                        const preview = document.createElement('img');
+                        preview.src = compressedDataUrl;
+                        preview.className = "w-16 h-16 rounded-lg border border-slate-800 object-cover";
+                        container.appendChild(preview);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function handleReportSubmit(e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span>Encrypting & Transmitting...</span>`;
+
+            const category = document.querySelector('input[name="category"]:checked').value;
+            const location = document.getElementById('report-location').value.trim();
+            const priority = document.getElementById('report-priority').value;
+            const date = document.getElementById('report-date').value;
+            const time = document.getElementById('report-time').value;
+            const description = document.getElementById('report-description').value.trim();
+
+            const randomIdNum = Math.floor(100000 + Math.random() * 900000);
+            const randomPinNum = Math.floor(100000 + Math.random() * 900000);
+            const passcode = `REP-${randomPinNum}`;
+
+            const newReport = {
+                id: `INC-${randomIdNum}`,
+                passcode: passcode,
+                timestamp: new Date().toISOString(),
+                priority: priority,
+                category: category,
+                date: date,
+                time: time,
+                location: location,
+                description: description,
+                photos: uploadedImagesData,
+                status: 'Pending Review',
+                logs: [{ time: new Date().toLocaleString(), note: 'Report submitted via public portal.' }]
+            };
+
+            try {
+                const response = await fetch(`${FIREBASE_DB_URL}/reports/${passcode}.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newReport)
+                });
+
+                if (!response.ok) throw new Error('Network error');
+
+                document.getElementById('receipt-id').textContent = newReport.id;
+                document.getElementById('receipt-pin').textContent = newReport.passcode;
+
+                document.getElementById('view-submit').classList.add('hidden');
+                document.getElementById('view-success').classList.remove('hidden');
+                document.getElementById('report-form').reset();
+                uploadedImagesData = [];
+                document.getElementById('preview-container').innerHTML = '';
+                showToast('Report successfully transmitted!');
+            } catch (err) {
+                console.error(err);
+                showToast('Transmission failed. Check Firebase URL or internet connection.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i data-lucide="shield-check" class="w-5 h-5"></i><span>Submit Encrypted Anonymous Report</span>`;
+                lucide.createIcons();
+            }
+        }
+
+        async function handleTrackReport() {
+            const pin = document.getElementById('track-pin-input').value.trim().toUpperCase();
+            const container = document.getElementById('track-result-container');
+            container.innerHTML = `<div class="text-xs text-slate-400 text-center">Querying encrypted records...</div>`;
+
+            if (!pin) {
+                container.innerHTML = '';
+                return showToast('Please enter your Secret PIN');
+            }
+
+            try {
+                const response = await fetch(`${FIREBASE_DB_URL}/reports/${pin}.json`);
+                const found = await response.json();
+
+                if (!found) {
+                    container.innerHTML = `<div class="bg-slate-950 p-4 rounded-xl border border-rose-900/50 text-xs text-rose-400 text-center">No report found matching PIN '${escapeHtml(pin)}'.</div>`;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 text-xs">
+                        <div class="flex justify-between items-center border-b border-slate-900 pb-2">
+                            <span class="font-mono font-bold text-slate-100">${escapeHtml(found.id)}</span>
+                            <span class="px-2.5 py-0.5 rounded-full font-semibold bg-cyan-950 text-cyan-400 border border-cyan-800/50">${escapeHtml(found.status)}</span>
+                        </div>
+                        <div><span class="text-slate-500 uppercase text-[10px] block font-bold">Category</span><span class="text-slate-200">${escapeHtml(found.category)}</span></div>
+                        <div><span class="text-slate-500 uppercase text-[10px] block font-bold">Location</span><span class="text-slate-200">${escapeHtml(found.location)}</span></div>
+                        <div><span class="text-slate-500 uppercase text-[10px] block font-bold">Latest Case Log</span>
+                            <div class="text-slate-400 mt-1 bg-slate-900 p-2 rounded-lg">
+                                ${found.logs && found.logs.length > 0 ? escapeHtml(found.logs[found.logs.length - 1].note) : 'Under initial review.'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                showToast('Report status retrieved');
+            } catch (err) {
+                container.innerHTML = `<div class="text-xs text-rose-400 text-center">Connection error while retrieving status.</div>`;
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = msg;
+            toast.classList.remove('hidden'); toast.classList.add('flex');
+            setTimeout(() => { toast.classList.add('hidden'); toast.classList.remove('flex'); }, 3000);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
